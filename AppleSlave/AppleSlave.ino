@@ -1,11 +1,18 @@
+#include <BlockDriver.h>
+#include <FreeStack.h>
+#include <MinimumSerial.h>
+#include <SdFat.h>
+#include <SdFatConfig.h>
+#include <SysCall.h>
+
 /*
  * Operate on FAT files on SD card from Apple II
  */
-#define RTCLIB // Include RTC library?
+ // do not Include RTC library?
 #define FAST_BUF_XFER   // Buffer transfer with interrupts OFF in a polling loop
-#define TRISTATE_OUTPUT // Tristate output when not asserted
+//do not define TRISTATE_OUTPUT // Tristate output when not asserted
 #include <SdFat.h>
-const int sdSSpin = 10; // 4 for SD card on ethernet shield, 10 for SD card data logger shield
+const int sdSSpin = 4; // 4 for SD card on ethernet shield, 10 for SD card data logger shield
 /*
  * Access RTC on data logger shield
  */
@@ -20,7 +27,11 @@ RTC_DS1307 rtc;
 const int SSpin   = 3; // PORTD.3 for Uno
 const int SCKpin  = 6; // PORTD.6 for Uno
 const int MISOpin = 7; // PORTD.7 for Uno
-const int MOSIpin = 8; // PORTB.0 for Uno
+
+//2017-07-03: Changed pin 8 to 9 to avoid conflict with SD shield
+const int MOSIpin = 9; // PORTB.0 for Uno
+const int FATpin = 10; // SDFAT may use internal SPI library that requires Pin 10 to be output
+
 /*
  * SPI status
  */
@@ -122,7 +133,12 @@ void setup(void)
 #else
   pinMode(MISOpin, OUTPUT);
 #endif
+
+  //Set pin 10 output for compatibility with SDFAT SPI library
+  pinMode(FATpin, OUTPUT);
+  
   digitalWrite(MISOpin, LOW);
+  
   Serial.begin(9600);
   //attachInterrupt(digitalPinToInterrupt(SSpin), spiXfer, FALLING);
   EICRA = 0x0A; // Falling edge triggered IRQ
